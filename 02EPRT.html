@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<!-- saved from url=(0032)https://02extsubmit.netlify.app/ -->
+<html lang="zh-CN"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scratch 扩展提交工具</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #00baad;
+            --primary-hover: #00a89c;
+            --primary-light: rgba(0, 186, 173, 0.08);
+
+            --bg-primary: #f7f9f4;
+            --bg-secondary: #eef2e8;
+            --bg-tertiary: #ffffff;
+            --bg-input: #ffffff;
+            --text-primary: #1d1d1f;
+            --text-secondary: #515154;
+            --text-tertiary: #86868b;
+            --text-quaternary: #aeaeb2;
+            --border: #d8ddd0;
+            --border-light: #e5ebe0;
+
+            --success: #34c759;
+            --warning: #b8860b;
+            --error: #d93025;
+            --error-bg: #fef2f2;
+            --success-bg: #f0fdf4;
+            --info-bg: #f0f9ff;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #1a1d1a;
+                --bg-secondary: #222522;
+                --bg-tertiary: #2a2d2a;
+                --bg-input: #2a2d2a;
+                --text-primary: #f5f5f7;
+                --text-secondary: #a1a1a6;
+                --text-tertiary: #6e6e73;
+                --text-quaternary: #48484a;
+                --border: #3a3d3a;
+                --border-light: #2f322f;
+
+                --error-bg: #2d1b1b;
+                --success-bg: #1b2d1b;
+                --info-bg: #1b2d3a;
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 60px 24px 80px;
+        }
+
+        .header {
+            margin-bottom: 48px;
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .section {
+            padding: 32px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .section:last-of-type {
+            border-bottom: none;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: var(--text-primary);
+            margin-bottom: 24px;
+        }
+
+        .section-title-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .toggle-btn {
+            font-size: 14px;
+            color: var(--primary);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px 0;
+            font-weight: 500;
+            transition: color 0.15s ease;
+        }
+
+        .toggle-btn:hover {
+            color: var(--primary-hover);
+        }
+
+        /* 可打断动画的折叠区域 */
+        .collapsible {
+            overflow: hidden;
+            height: 0;
+            transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            will-change: height;
+        }
+
+        .collapsible-inner {
+            padding-bottom: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            letter-spacing: -0.01em;
+        }
+
+        .required {
+            color: var(--error);
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        input[type="text"],
+        input[type="url"],
+        textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-input);
+            color: var(--text-primary);
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.3s ease;
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 68px;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-input-label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 16px;
+            border-radius: 10px;
+            border: 1.5px dashed var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .file-input-label:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: var(--primary-light);
+        }
+
+        .file-input-label.has-file {
+            border-style: solid;
+            border-color: var(--primary);
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .image-preview {
+            margin-top: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            background: var(--bg-secondary);
+        }
+
+        .image-preview img {
+            width: 100%;
+            max-height: 220px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .image-info {
+            margin-top: 8px;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .image-info.ok { color: var(--success); }
+        .image-info.warn { color: var(--warning); }
+        .image-info.error { color: var(--error); }
+
+        .author-group {
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid var(--border-light);
+            background: var(--bg-tertiary);
+            margin-bottom: 12px;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+
+        .author-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .author-header span {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .btn-remove {
+            background: none;
+            color: var(--error);
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            padding: 2px 6px;
+        }
+
+        .btn-remove:hover {
+            text-decoration: underline;
+        }
+
+        .btn-add {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: none;
+            color: var(--primary);
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 8px 0;
+        }
+
+        .btn-add:hover {
+            color: var(--primary-hover);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            cursor: pointer;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .submit-area {
+            margin-top: 48px;
+        }
+
+        .btn-submit {
+            display: block;
+            width: 100%;
+            padding: 14px 24px;
+            border-radius: 12px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease;
+            font-family: inherit;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            background: var(--primary-hover);
+        }
+
+        .btn-submit:active:not(:disabled) {
+            transform: scale(0.995);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 3px;
+            background: var(--border-light);
+            border-radius: 2px;
+            margin-top: 16px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar.active {
+            display: block;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .status-message {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-top: 16px;
+            font-size: 14px;
+            line-height: 1.5;
+            display: none;
+        }
+
+        .status-message.success {
+            display: block;
+            background: var(--success-bg);
+            color: var(--success);
+        }
+
+        .status-message.error {
+            display: block;
+            background: var(--error-bg);
+            color: var(--error);
+        }
+
+        .status-message.loading {
+            display: block;
+            background: var(--info-bg);
+            color: #0369a1;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .status-message.loading {
+                color: #5ac8fa;
+            }
+        }
+
+        .status-message a {
+            color: inherit;
+            text-decoration: underline;
+            word-break: break-all;
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 40px 20px 60px;
+            }
+
+            h1 {
+                font-size: 26px;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+                gap: 0;
+            }
+
+            .section {
+                padding: 28px 0;
+            }
+        }
+    </style>
+<style>
+  .imageye-selected {
+    outline: 2px solid black !important;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5) !important;
+  }
+</style></head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>提交扩展</h1>
+            <p class="subtitle">填写信息，自动生成文件并提交 Pull Request</p>
+        </div>
+
+        <form id="submitForm">
+            <!-- 基本信息 -->
+            <div class="section">
+                <h2 class="section-title">基本信息</h2>
+
+                <div class="form-group">
+                    <label>Slug <span class="required">*</span></label>
+                    <input type="text" id="slug" placeholder="my-awesome-extension" required="" pattern="[a-zA-Z0-9_-]+">
+                    <span class="help-text">纯英文标识符，与扩展 JS 文件名相同（不含 .js）</span>
+                </div>
+
+                <div class="form-group">
+                    <label>扩展名称 <span class="required">*</span></label>
+                    <input type="text" id="name" placeholder="我的超棒扩展" required="">
+                </div>
+
+                <div class="form-group">
+                    <label>扩展描述（英文） <span class="required">*</span></label>
+                    <textarea id="description" placeholder="Describe your extension in English..." required=""></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>扩展 ID <span class="required">*</span></label>
+                    <input type="text" id="extId" placeholder="myAwesomeExtension" required="" pattern="[a-zA-Z0-9_-]+">
+                    <span class="help-text">通常与 slug 相同，纯英文</span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>版本号</label>
+                        <input type="text" id="version" placeholder="1.0.0">
+                    </div>
+                    <div class="form-group">
+                        <label>许可证</label>
+                        <input type="text" id="license" placeholder="MIT">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 翻译信息 -->
+            <div class="section">
+                <div class="section-title-row">
+                    <h2 class="section-title" style="margin-bottom:0;">翻译信息</h2>
+                    <button type="button" class="toggle-btn" onclick="toggleSection(event, &#39;translations&#39;)">展开</button>
+                </div>
+                <div class="collapsible" id="translations">
+                    <div class="collapsible-inner">
+                        <div class="form-group">
+                            <label>中文名称</label>
+                            <input type="text" id="nameZh" placeholder="中文名称">
+                        </div>
+                        <div class="form-group">
+                            <label>英文名称</label>
+                            <input type="text" id="nameEn" placeholder="English name">
+                        </div>
+                        <div class="form-group">
+                            <label>中文描述</label>
+                            <textarea id="descZh" placeholder="中文描述内容..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>英文描述</label>
+                            <textarea id="descEn" placeholder="English description..."></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 作者信息 -->
+            <div class="section">
+                <h2 class="section-title">作者</h2>
+                <div id="authorsContainer">
+                    <div class="author-group" data-index="0">
+                        <div class="author-header">
+                            <span>作者 1</span>
+                        </div>
+                        <div class="form-group">
+                            <label>名称 <span class="required">*</span></label>
+                            <input type="text" class="author-name" placeholder="作者名称" required="">
+                        </div>
+                        <div class="form-group">
+                            <label>链接</label>
+                            <input type="url" class="author-link" placeholder="https://github.com/xxx">
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn-add" onclick="addAuthor()">+ 添加作者</button>
+            </div>
+
+            <!-- 文件上传 -->
+            <div class="section">
+                <h2 class="section-title">文件</h2>
+
+                <div class="form-group">
+                    <label>扩展 JS 文件 <span class="required">*</span></label>
+                    <span class="help-text" style="margin-top:0; margin-bottom:6px; display:block;">文件名须为 {slug}.js</span>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="jsFile" accept=".js,application/javascript" required="">
+                        <label for="jsFile" class="file-input-label">
+                            <span class="file-text">选择 .js 文件</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>封面图片 <span class="required">*</span></label>
+                    <span class="help-text" style="margin-top:0; margin-bottom:6px; display:block;">建议 2:1 比例，不匹配将自动居中裁剪</span>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="coverImage" accept="image/*" required="">
+                        <label for="coverImage" class="file-input-label">
+                            <span class="file-text">选择封面图片</span>
+                        </label>
+                    </div>
+                    <div class="image-preview" id="imagePreview"></div>
+                    <div class="image-info" id="imageInfo"></div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="hasDocs">
+                        <label for="hasDocs">提供文档（HTML 格式）</label>
+                    </div>
+                    <div id="docsUpload" style="display:none; margin-top: 12px;">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="docsFile" accept=".html,text/html">
+                            <label for="docsFile" class="file-input-label">
+                                <span class="file-text">选择文档 HTML 文件</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="hasSamples">
+                        <label for="hasSamples">提供实例作品（.sb3 格式）</label>
+                    </div>
+                    <div id="samplesUpload" style="display:none; margin-top: 12px;">
+                        <div class="file-input-wrapper">
+                            <input type="file" id="sampleFile" accept=".sb3,application/zip">
+                            <label for="sampleFile" class="file-input-label">
+                                <span class="file-text">选择实例 .sb3 文件</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 提交 -->
+            <div class="submit-area">
+                <button type="submit" class="btn-submit" id="submitBtn">提交扩展并创建 PR</button>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="status-message" id="statusMessage"></div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        'use strict';
+
+        // ---- 可打断动画的折叠 ----
+        var activeCollapsible = null;
+
+        function toggleSection(evt, id) {
+            if (evt) {
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
+
+            var el = document.getElementById(id);
+            var btn = evt ? evt.target : document.querySelector('[onclick*="' + id + '"]');
+            var isOpen = el.classList.contains('open');
+
+            // 如果正在动画中，先强制完成当前动画
+            if (activeCollapsible === el) {
+                el.style.transition = 'none';
+                el.offsetHeight;
+                el.style.transition = '';
+            }
+
+            if (isOpen) {
+                el.style.height = el.scrollHeight + 'px';
+                el.offsetHeight;
+                el.style.height = '0px';
+                el.classList.remove('open');
+                if (btn) btn.textContent = '展开';
+                activeCollapsible = el;
+                setTimeout(function() {
+                    if (activeCollapsible !== el) return;
+                    el.style.height = '';
+                    activeCollapsible = null;
+                }, 400);
+            } else {
+                el.classList.add('open');
+                el.style.height = '0px';
+                el.offsetHeight;
+                var targetHeight = el.scrollHeight;
+                el.style.height = targetHeight + 'px';
+                if (btn) btn.textContent = '收起';
+                activeCollapsible = el;
+                setTimeout(function() {
+                    if (activeCollapsible !== el) return;
+                    el.style.height = '';
+                    activeCollapsible = null;
+                }, 400);
+            }
+        }
+
+        function showStatus(msg, type, link) {
+            var el = document.getElementById('statusMessage');
+            el.className = 'status-message ' + type;
+            el.innerHTML = link ? msg + '<br><a href="' + link + '" target="_blank">' + link + '</a>' : msg;
+        }
+
+        function setProgress(pct) {
+            document.getElementById('progressBar').classList.add('active');
+            document.getElementById('progressFill').style.width = pct + '%';
+        }
+
+        // ---- 作者管理 ----
+        var authorCount = 1;
+        function addAuthor() {
+            if (authorCount >= 5) {
+                alert('最多添加 5 位作者');
+                return;
+            }
+            var container = document.getElementById('authorsContainer');
+            var idx = authorCount;
+            var div = document.createElement('div');
+            div.className = 'author-group';
+            div.dataset.index = idx;
+            div.innerHTML = `
+                <div class="author-header">
+                    <span>作者 ${idx + 1}</span>
+                    <button type="button" class="btn-remove" onclick="removeAuthor(${idx})">删除</button>
+                </div>
+                <div class="form-group">
+                    <label>名称 <span class="required">*</span></label>
+                    <input type="text" class="author-name" placeholder="作者名称" required>
+                </div>
+                <div class="form-group">
+                    <label>链接</label>
+                    <input type="url" class="author-link" placeholder="https://github.com/xxx">
+                </div>
+            `;
+            container.appendChild(div);
+            authorCount++;
+        }
+
+        function removeAuthor(idx) {
+            var el = document.querySelector('.author-group[data-index="' + idx + '"]');
+            if (el) el.remove();
+        }
+
+        // ---- 文件选择 UI ----
+        function setupFileInput(inputId, defaultText) {
+            var input = document.getElementById(inputId);
+            var label = input.nextElementSibling;
+            var textEl = label.querySelector('.file-text');
+            input.addEventListener('change', function() {
+                if (input.files.length > 0) {
+                    label.classList.add('has-file');
+                    textEl.textContent = input.files[0].name;
+                } else {
+                    label.classList.remove('has-file');
+                    textEl.textContent = defaultText;
+                }
+            });
+        }
+
+        setupFileInput('jsFile', '选择 .js 文件');
+        setupFileInput('docsFile', '选择文档 HTML 文件');
+        setupFileInput('sampleFile', '选择实例 .sb3 文件');
+
+        // 封面图预览 + 比例检测
+        var coverImageData = null;
+        document.getElementById('coverImage').addEventListener('change', function(e) {
+            var file = e.target.files[0];
+            var label = document.getElementById('coverImage').nextElementSibling;
+            var textEl = label.querySelector('.file-text');
+            var preview = document.getElementById('imagePreview');
+            var info = document.getElementById('imageInfo');
+
+            if (!file) {
+                label.classList.remove('has-file');
+                textEl.textContent = '选择封面图片';
+                preview.innerHTML = '';
+                info.textContent = '';
+                info.className = 'image-info';
+                coverImageData = null;
+                return;
+            }
+
+            label.classList.add('has-file');
+            textEl.textContent = file.name;
+
+            var reader = new FileReader();
+            reader.onload = function(ev) {
+                var img = new Image();
+                img.onload = function() {
+                    var ratio = img.width / img.height;
+                    preview.innerHTML = '<img src="' + ev.target.result + '" alt="preview">';
+
+                    if (Math.abs(ratio - 2) < 0.05) {
+                        info.className = 'image-info ok';
+                        info.textContent = '比例正确（' + img.width + 'x' + img.height + '）— 无需裁剪';
+                    } else {
+                        info.className = 'image-info warn';
+                        info.textContent = '当前比例 ' + ratio.toFixed(2) + ':1，目标 2:1。提交时将自动居中裁剪。';
+                    }
+                };
+                img.src = ev.target.result;
+                coverImageData = { file: file, dataUrl: ev.target.result };
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // 文档/实例复选框
+        document.getElementById('hasDocs').addEventListener('change', function(e) {
+            document.getElementById('docsUpload').style.display = e.target.checked ? 'block' : 'none';
+            document.getElementById('docsFile').required = e.target.checked;
+        });
+        document.getElementById('hasSamples').addEventListener('change', function(e) {
+            document.getElementById('samplesUpload').style.display = e.target.checked ? 'block' : 'none';
+            document.getElementById('sampleFile').required = e.target.checked;
+        });
+
+        // Slug 同步到 ID 字段
+        document.getElementById('slug').addEventListener('blur', function(e) {
+            var idField = document.getElementById('extId');
+            if (!idField.value) {
+                idField.value = e.target.value;
+            }
+        });
+
+        // ---- 图片裁剪为 2:1 ----
+        function cropImageTo2x1(file) {
+            return new Promise(function(resolve) {
+                var img = new Image();
+                img.onload = function() {
+                    var targetRatio = 2;
+                    var currentRatio = img.width / img.height;
+                    var sx, sy, sw, sh;
+
+                    if (currentRatio > targetRatio) {
+                        sh = img.height;
+                        sw = img.height * targetRatio;
+                        sx = (img.width - sw) / 2;
+                        sy = 0;
+                    } else {
+                        sw = img.width;
+                        sh = img.width / targetRatio;
+                        sx = 0;
+                        sy = (img.height - sh) / 2;
+                    }
+
+                    var canvas = document.createElement('canvas');
+                    canvas.width = sw;
+                    canvas.height = sh;
+                    var ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+
+                    canvas.toBlob(function(blob) {
+                        var baseName = file.name.replace(/\.[^.]+$/, '');
+                        var croppedFile = new File([blob], baseName + '.png', {
+                            type: 'image/png'
+                        });
+                        resolve(croppedFile);
+                    }, 'image/png');
+                };
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        // ---- 文件转 base64 ----
+        function fileToBase64(file) {
+            return new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function() {
+                    var result = reader.result;
+                    var base64 = result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ---- 提交 ----
+        document.getElementById('submitForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            var btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.textContent = '处理中...';
+
+            try {
+                setProgress(10);
+                showStatus('正在读取文件...', 'loading');
+
+                var slug = document.getElementById('slug').value.trim();
+                var name = document.getElementById('name').value.trim();
+                var description = document.getElementById('description').value.trim();
+                var extId = document.getElementById('extId').value.trim();
+                var version = document.getElementById('version').value.trim();
+                var license = document.getElementById('license').value.trim();
+
+                var nameZh = document.getElementById('nameZh').value.trim();
+                var nameEn = document.getElementById('nameEn').value.trim();
+                var descZh = document.getElementById('descZh').value.trim();
+                var descEn = document.getElementById('descEn').value.trim();
+
+                var authors = [];
+                var authorGroups = document.querySelectorAll('.author-group');
+                for (var i = 0; i < authorGroups.length; i++) {
+                    var group = authorGroups[i];
+                    var aname = group.querySelector('.author-name').value.trim();
+                    var alink = group.querySelector('.author-link').value.trim();
+                    if (aname) {
+                        var author = { name: aname };
+                        if (alink) author.link = alink;
+                        authors.push(author);
+                    }
+                }
+
+                if (authors.length === 0) {
+                    throw new Error('至少需要一位作者');
+                }
+
+                var jsFile = document.getElementById('jsFile').files[0];
+                var coverFile = document.getElementById('coverImage').files[0];
+                var hasDocs = document.getElementById('hasDocs').checked;
+                var hasSamples = document.getElementById('hasSamples').checked;
+                var docsFile = hasDocs ? document.getElementById('docsFile').files[0] : null;
+                var sampleFile = hasSamples ? document.getElementById('sampleFile').files[0] : null;
+
+                var expectedJsName = slug + '.js';
+                if (jsFile.name !== expectedJsName) {
+                    throw new Error('JS 文件名必须为 ' + expectedJsName + '，当前为 ' + jsFile.name);
+                }
+
+                setProgress(25);
+                showStatus('正在处理封面图片...', 'loading');
+
+                var croppedCover = await cropImageTo2x1(coverFile);
+                var coverExt = croppedCover.name.split('.').pop() || 'png';
+
+                setProgress(40);
+                showStatus('正在编码文件...', 'loading');
+
+                var jsContent = await fileToBase64(jsFile);
+                var coverContent = await fileToBase64(croppedCover);
+                var docsContent = null;
+                var sampleContent = null;
+
+                if (docsFile) {
+                    docsContent = await fileToBase64(docsFile);
+                }
+                if (sampleFile) {
+                    sampleContent = await fileToBase64(sampleFile);
+                }
+
+                setProgress(60);
+                showStatus('正在提交到服务器...', 'loading');
+
+                var payload = {
+                    slug: slug,
+                    name: name,
+                    description: description,
+                    extId: extId,
+                    version: version || undefined,
+                    license: license || undefined,
+                    authors: authors,
+                    coverExt: coverExt,
+                    jsContent: jsContent,
+                    coverContent: coverContent,
+                    docs: hasDocs,
+                    docsContent: docsContent,
+                    hasSamples: hasSamples,
+                    sampleContent: sampleContent
+                };
+
+                if (nameZh || nameEn || descZh || descEn) {
+                    payload.translations = {};
+                    if (nameZh || nameEn) {
+                        payload.translations.nameTranslations = {};
+                        if (nameZh) payload.translations.nameTranslations['zh-cn'] = nameZh;
+                        if (nameEn) payload.translations.nameTranslations['en'] = nameEn;
+                    }
+                    if (descZh || descEn) {
+                        payload.translations.descriptionTranslations = {};
+                        if (descZh) payload.translations.descriptionTranslations['zh-cn'] = descZh;
+                        if (descEn) payload.translations.descriptionTranslations['en'] = descEn;
+                    }
+                }
+
+                var resp = await fetch('/.netlify/functions/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                setProgress(85);
+
+                var rawText = await resp.text();
+
+                var result = {};
+                try {
+                    result = rawText ? JSON.parse(rawText) : {};
+                } catch (e) {
+                    console.error('提交响应不是合法 JSON，前 300 字符:', rawText.slice(0, 300));
+                    result = {
+                        error: '服务器返回了无法解析的内容' +
+                               (resp.ok ? '' : '（HTTP ' + resp.status + '）') +
+                               '。请确认函数已成功部署。'
+                    };
+                }
+
+                if (!resp.ok || result.error) {
+                    var msg = result.error || ('请求失败（HTTP ' + resp.status + '）');
+                    if (result.missing && result.missing.length) {
+                        msg += '（缺失: ' + result.missing.join(', ') + '）';
+                    }
+                    throw new Error(msg);
+                }
+
+                setProgress(100);
+                showStatus(
+                    '提交成功！PR #' + result.pullRequestNumber + ' 已创建。',
+                    'success',
+                    result.pullRequestUrl
+                );
+                btn.textContent = '提交成功，可再次提交';
+
+            } catch (err) {
+                console.error(err);
+                showStatus('错误：' + err.message, 'error');
+                btn.textContent = '提交扩展并创建 PR';
+            } finally {
+                btn.disabled = false;
+            }
+        });
+    </script>
+
+
+</body></html>
