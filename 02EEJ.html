@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>show_widget</title>
+</head>
+<body>
+<div style="font-family: 'SF Mono', 'Monaco', 'Menlo', 'Consolas', monospace; max-width: 720px; margin: 0 auto; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08);">
+  <div style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 16px 20px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 20px;">🧩</span>
+      <span style="color: #fff; font-size: 15px; font-weight: 600; letter-spacing: 0.3px;">02Engine 扩展提交 JSON 模板</span>
+    </div>
+    <span style="color: #94a3b8; font-size: 12px; background: rgba(255,255,255,0.08); padding: 4px 10px; border-radius: 4px;">v1.0.0</span>
+  </div>
+  <div style="background: #0f172a; padding: 16px 20px; position: relative;">
+    <pre id="json-code" style="margin: 0; font-size: 13px; line-height: 1.6; color: #e2e8f0; overflow-x: auto; white-space: pre; tab-size: 2;">{
+  <span style="color: #7dd3fc;">"slug"</span>: <span style="color: #a5d6ff;">"你的扩展slug"</span>,
+  <span style="color: #7dd3fc;">"id"</span>: <span style="color: #a5d6ff;">"你的扩展id"</span>,
+  <span style="color: #7dd3fc;">"name"</span>: <span style="color: #a5d6ff;">"扩展显示名称"</span>,
+  <span style="color: #7dd3fc;">"description"</span>: <span style="color: #a5d6ff;">"扩展的简短描述"</span>,
+  <span style="color: #7dd3fc;">"nameTranslations"</span>: {
+    <span style="color: #7dd3fc;">"zh-cn"</span>: <span style="color: #a5d6ff;">"中文名称（可选）"</span>,
+    <span style="color: #7dd3fc;">"en"</span>: <span style="color: #a5d6ff;">"英文名称（可选）"</span>
+  },
+  <span style="color: #7dd3fc;">"descriptionTranslations"</span>: {
+    <span style="color: #7dd3fc;">"zh-cn"</span>: <span style="color: #a5d6ff;">"中文描述（可选）"</span>,
+    <span style="color: #7dd3fc;">"en"</span>: <span style="color: #a5d6ff;">"英文描述（可选）"</span>
+  },
+  <span style="color: #7dd3fc;">"image"</span>: <span style="color: #a5d6ff;">"图标文件名.png"</span>,
+  <span style="color: #7dd3fc;">"by"</span>: [
+    {
+      <span style="color: #7dd3fc;">"name"</span>: <span style="color: #a5d6ff;">"作者名"</span>,
+      <span style="color: #7dd3fc;">"link"</span>: <span style="color: #a5d6ff;">"作者链接（可选）"</span>
+    }
+  ],
+  <span style="color: #7dd3fc;">"docs"</span>: <span style="color: #fbbf24;">false</span>,
+  <span style="color: #7dd3fc;">"samples"</span>: [<span style="color: #a5d6ff;">"示例作品名"</span>],
+  <span style="color: #7dd3fc;">"version"</span>: <span style="color: #a5d6ff;">"1.0.0"</span>,
+  <span style="color: #7dd3fc;">"license"</span>: <span style="color: #a5d6ff;">"MIT"</span>,
+  <span style="color: #7dd3fc;">"scratchCompatible"</span>: <span style="color: #fbbf24;">false</span>
+}</pre>
+  </div>
+  <div style="background: #1e293b; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between;">
+    <span style="color: #64748b; font-size: 12px;">📋 点击按钮复制完整 JSON 模板</span>
+    <button id="copy-btn" onclick="copyJSON()" style="display: flex; align-items: center; gap: 6px; background: linear-gradient(135deg, #3b82f6, #2563eb); color: #fff; border: none; border-radius: 6px; padding: 8px 18px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+      <span id="btn-icon">📄</span>
+      <span id="btn-text">复制模板</span>
+    </button>
+  </div>
+</div>
+<script>
+function copyJSON() {
+  const raw = `{\n  "slug": "你的扩展slug",\n  "id": "你的扩展id",\n  "name": "扩展显示名称",\n  "description": "扩展的简短描述",\n  "nameTranslations": {\n    "zh-cn": "中文名称（可选）",\n    "en": "英文名称（可选）"\n  },\n  "descriptionTranslations": {\n    "zh-cn": "中文描述（可选）",\n    "en": "英文描述（可选）"\n  },\n  "image": "图标文件名.png",\n  "by": [\n    {\n      "name": "作者名",\n      "link": "作者链接（可选）"\n    }\n  ],\n  "docs": false,\n  "samples": ["示例作品名"],\n  "version": "1.0.0",\n  "license": "MIT",\n  "scratchCompatible": false\n}`;
+  navigator.clipboard.writeText(raw).then(() => {
+    const icon = document.getElementById('btn-icon');
+    const text = document.getElementById('btn-text');
+    const btn = document.getElementById('copy-btn');
+    icon.textContent = '✅';
+    text.textContent = '已复制！';
+    btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+    setTimeout(() => {
+      icon.textContent = '📄';
+      text.textContent = '复制模板';
+      btn.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+    }, 2000);
+  }).catch(() => {
+    const text = document.getElementById('btn-text');
+    text.textContent = '复制失败，请手动选择';
+    setTimeout(() => { text.textContent = '复制模板'; }, 2000);
+  });
+}
+</script><script data-tabbit-widget-diagnostics="true">
+(function(){
+  if (window.__tabbitWidgetDiagnosticsInstalled) return;
+  window.__tabbitWidgetDiagnosticsInstalled = true;
+  window.__TABBIT_WIDGET_ERRORS__ = window.__TABBIT_WIDGET_ERRORS__ || [];
+  function emit(level, args) {
+    var payload = {
+      type: "tabbit_widget_diagnostics",
+      level: level,
+      message: Array.prototype.slice.call(args || []).map(function(item) {
+        if (item && item.stack) return item.stack;
+        if (typeof item === "string") return item;
+        try { return JSON.stringify(item); } catch (_) { return String(item); }
+      }).join(" "),
+      timestamp: Date.now()
+    };
+    window.__TABBIT_WIDGET_ERRORS__.push(payload);
+    try { window.parent && window.parent.postMessage(payload, "*"); } catch (_) {}
+  }
+  var originalError = console.error;
+  console.error = function() {
+    emit("error", arguments);
+    return originalError && originalError.apply(console, arguments);
+  };
+  window.addEventListener("error", function(event) {
+    emit("error", [event.message || "Script error", event.filename || "", event.lineno || ""]);
+  });
+  window.addEventListener("unhandledrejection", function(event) {
+    emit("unhandledrejection", [event.reason || "Unhandled promise rejection"]);
+  });
+})();
+</script>
+</body>
+</html>
