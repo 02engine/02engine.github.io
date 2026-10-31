@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AES 文件加解密</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #0f1117;
+            color: #e6e8ee;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            font-size: 15px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        .app {
+            width: 100%;
+            max-width: 820px;
+        }
+        h1 {
+            font-size: 22px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin-bottom: 20px;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        h1 span {
+            font-size: 26px;
+        }
+        .subhead {
+            color: #6b7285;
+            font-size: 13px;
+            margin-bottom: 24px;
+            border-left: 3px solid #4f7cff;
+            padding-left: 14px;
+            line-height: 1.5;
+        }
+        .card {
+            background: #171a23;
+            border: 1px solid #232734;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 18px;
+        }
+        .card h2 {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #6b7285;
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            font-size: 13px;
+            color: #9aa1b3;
+            margin-bottom: 6px;
+            margin-top: 16px;
+            font-weight: 500;
+        }
+        label:first-of-type {
+            margin-top: 0;
+        }
+        /* 排除 radio，避免全局 input 样式撑大单选按钮 */
+        input:not([type="radio"]):not([type="file"]),
+        select {
+            width: 100%;
+            background: #0d0f15;
+            color: #e6e8ee;
+            border: 1px solid #2a2f3e;
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: border-color 0.15s, background 0.15s;
+            line-height: 1.55;
+            min-height: 44px;
+        }
+        input[type="file"] {
+            width: 100%;
+            background: #0d0f15;
+            color: #e6e8ee;
+            border: 1px solid #2a2f3e;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            min-height: 44px;
+        }
+        input[type="file"]::file-selector-button {
+            background: #2a2f3e;
+            border: none;
+            color: #e6e8ee;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            margin-right: 14px;
+            transition: background 0.15s;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background: #3a4055;
+        }
+        input:not([type="radio"]):not([type="file"]):focus,
+        select:focus {
+            outline: none;
+            border-color: #4f7cff;
+            background: #0b0e15;
+        }
+        input:not([type="radio"]):not([type="file"])::placeholder {
+            color: #4a5164;
+        }
+        .row {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        @media (max-width: 600px) {
+            .row-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+        button {
+            background: #4f7cff;
+            color: #fff;
+            border: none;
+            border-radius: 10px;
+            padding: 0 20px;
+            height: 42px;
+            font-size: 14px;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.15s, opacity 0.15s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        button:hover:not(:disabled) {
+            background: #3d6af0;
+        }
+        button:active:not(:disabled) {
+            background: #345ddb;
+        }
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        button.ghost {
+            background: transparent;
+            color: #9aa1b3;
+            border: 1px solid #2a2f3e;
+        }
+        button.ghost:hover:not(:disabled) {
+            background: #1e2330;
+            color: #e6e8ee;
+            border-color: #3a4055;
+        }
+        button.danger {
+            background: transparent;
+            color: #f06b6b;
+            border: 1px solid #3a2528;
+        }
+        button.danger:hover:not(:disabled) {
+            background: #2a1a1d;
+            border-color: #5a3035;
+        }
+        /* 图标按钮：固定宽高，居中 */
+        button.icon {
+            width: 44px;
+            min-width: 44px;
+            height: 44px;
+            padding: 0;
+            flex-shrink: 0;
+            background: transparent;
+            color: #9aa1b3;
+            border: 1px solid #2a2f3e;
+            font-size: 16px;
+            line-height: 1;
+        }
+        button.icon:hover:not(:disabled) {
+            background: #1e2330;
+            color: #e6e8ee;
+            border-color: #3a4055;
+        }
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: #0d0f15;
+            border: 1px solid #2a2f3e;
+            border-radius: 40px;
+            padding: 8px 20px;
+            width: fit-content;
+            flex-wrap: wrap;
+        }
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 0;
+            margin-top: 0;
+            font-weight: 400;
+            cursor: pointer;
+            color: #9aa1b3;
+            font-size: 13px;
+        }
+        .radio-group input[type="radio"] {
+            width: auto;
+            margin: 0;
+            accent-color: #4f7cff;
+            transform: scale(1.15);
+            cursor: pointer;
+        }
+        .file-info {
+            background: #0d0f15;
+            border: 1px solid #232734;
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-top: 12px;
+            font-size: 13px;
+            color: #9aa1b3;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .file-info span {
+            word-break: break-all;
+        }
+        .file-info .file-size {
+            background: #1e2330;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12px;
+            color: #b0b8cc;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #1e2330;
+            border-radius: 2px;
+            margin: 16px 0 8px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #4f7cff;
+            width: 0%;
+            transition: width 0.2s;
+            border-radius: 2px;
+        }
+        .status-text {
+            font-size: 13px;
+            color: #6b7285;
+            text-align: center;
+            min-height: 22px;
+        }
+        .error {
+            color: #f09595;
+            background: #2a1a1d;
+            border: 1px solid #5a3035;
+            padding: 12px 18px;
+            border-radius: 10px;
+            margin: 12px 0;
+            font-size: 13px;
+            word-break: break-word;
+            display: none;
+        }
+        .hidden {
+            display: none;
+        }
+        .note {
+            font-size: 12.5px;
+            color: #6b7285;
+            background: #0d0f15;
+            border: 1px solid #232734;
+            padding: 16px 18px;
+            border-radius: 12px;
+            margin-top: 16px;
+            line-height: 1.7;
+        }
+        .note code {
+            background: #1e2330;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #b0b8cc;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+        .note strong {
+            color: #9aa1b3;
+        }
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: #1e2330;
+            color: #e6e8ee;
+            border: 1px solid #2a2f3e;
+            padding: 11px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s, transform 0.2s;
+            z-index: 100;
+            max-width: 90vw;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast.err {
+            border-color: #5a3035;
+            color: #f09595;
+        }
+        .toast.ok {
+            border-color: #1f3a28;
+            color: #7dd39a;
+        }
+        .toast.warn {
+            border-color: #3a3220;
+            color: #e0c070;
+        }
+        @media (max-width: 560px) {
+            body {
+                padding: 24px 14px;
+            }
+            .card {
+                padding: 18px;
+            }
+            .row button {
+                flex: 1;
+            }
+            h1 {
+                font-size: 19px;
+            }
+            .radio-group {
+                padding: 8px 14px;
+                gap: 12px;
+            }
+            .row-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <h1><span>🔐</span> AES 文件加解密</h1>
+    <div class="subhead">选择文件进行加密/解密 · 支持任意格式 · Web Crypto API · 隐写风格界面</div>
+
+    <!-- 加密模式 & 密钥长度 -->
+    <div class="card">
+        <h2>加密配置</h2>
+        <label>加密模式</label>
+        <div class="radio-group">
+            <label>
+                <input type="radio" name="mode" value="GCM" checked> AES-GCM (推荐，认证加密)
+            </label>
+            <label>
+                <input type="radio" name="mode" value="CBC"> AES-CBC
+            </label>
+        </div>
+
+        <div class="row-2" style="margin-top:16px;">
+            <div>
+                <label>密钥长度 (bit)</label>
+                <select id="keyLength">
+                    <option value="128">128 位 (16字节)</option>
+                    <option value="192">192 位 (24字节)</option>
+                    <option value="256" selected>256 位 (32字节)</option>
+                </select>
+            </div>
+            <div>
+                <label>🔑 密钥 (Hex 或 文本)</label>
+                <div style="display:flex; gap:8px; align-items:stretch;">
+                    <input type="text" id="keyInput" placeholder="留空则自动生成随机密钥" value="" style="flex:1; min-width:0;">
+                    <button type="button" class="icon" id="generateKeyBtn" title="生成随机密钥">🎲</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 文件选择 & 操作 -->
+    <div class="card">
+        <h2>文件操作</h2>
+        <label>📂 选择文件</label>
+        <input type="file" id="fileInput">
+        <div id="fileInfo" class="file-info hidden">
+            <span>📄 <span id="fileName">未选择</span></span>
+            <span class="file-size" id="fileSize">0 B</span>
+        </div>
+
+        <div class="row" style="margin-top:16px;">
+            <button id="encryptBtn" class="primary">🔒 加密文件</button>
+            <button id="decryptBtn" class="ghost">🔓 解密文件</button>
+            <button id="clearBtn" class="danger">🗑️ 清空</button>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="status-text" id="statusText">就绪</div>
+
+        <div id="errorMsg" class="error"></div>
+
+        <div class="note">
+            <strong>💡 说明：</strong><br>
+            • 加密后的文件会以 <code>.enc</code> 为后缀下载；解密时请选择加密后的 <code>.enc</code> 文件，解密后恢复原始文件名（去掉 <code>.enc</code>）。<br>
+            • 文件格式：GCM 模式为 <code>[12字节IV][密文+标签]</code>；CBC 模式为 <code>[16字节IV][密文]</code>，均以二进制存储。<br>
+            • 密钥留空时加密会自动生成随机密钥并显示在输入框中，请务必保存。<br>
+            • 大文件会分块读取，内存占用可控。此脚本仅供学习/演示，生产环境请结合安全随机数并妥善管理密钥。
+        </div>
+    </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+    (function() {
+        // ---------- DOM 元素 ----------
+        const modeRadios = document.getElementsByName('mode');
+        const keyLengthSelect = document.getElementById('keyLength');
+        const keyInput = document.getElementById('keyInput');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileNameSpan = document.getElementById('fileName');
+        const fileSizeSpan = document.getElementById('fileSize');
+        const encryptBtn = document.getElementById('encryptBtn');
+        const decryptBtn = document.getElementById('decryptBtn');
+        const generateKeyBtn = document.getElementById('generateKeyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const progressFill = document.getElementById('progressFill');
+        const statusText = document.getElementById('statusText');
+        const errorMsg = document.getElementById('errorMsg');
+        const toastEl = document.getElementById('toast');
+
+        // ---------- Toast 提示 ----------
+        function toast(msg, type = '', ms = 2800) {
+            toastEl.textContent = msg;
+            toastEl.className = 'toast show ' + type;
+            clearTimeout(toastEl._t);
+            toastEl._t = setTimeout(() => toastEl.className = 'toast ' + type, ms);
+        }
+
+        // ---------- 工具函数 ----------
+        function showError(message) {
+            errorMsg.textContent = message;
+            errorMsg.style.display = 'block';
+            setTimeout(() => {
+                if (errorMsg.textContent === message) {
+                    errorMsg.style.display = 'none';
+                }
+            }, 8000);
+        }
+
+        function clearError() {
+            errorMsg.style.display = 'none';
+            errorMsg.textContent = '';
+        }
+
+        function setProgress(percent, status) {
+            progressFill.style.width = percent + '%';
+            if (status) statusText.textContent = status;
+        }
+
+        function resetProgress() {
+            progressFill.style.width = '0%';
+            statusText.textContent = '就绪';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 B';
+            const k = 1024;
+            const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function arrayBufferToHex(buffer) {
+            return Array.from(new Uint8Array(buffer))
+                .map(b => b.toString(16).padStart(2, '0'))
+                .join('');
+        }
+
+        function hexToUint8Array(hex) {
+            const bytes = new Uint8Array(hex.length / 2);
+            for (let i = 0; i < hex.length; i += 2) {
+                bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+            }
+            return bytes;
+        }
+
+        function getSelectedMode() {
+            for (let radio of modeRadios) {
+                if (radio.checked) return radio.value;
+            }
+            return 'GCM';
+        }
+
+        function getKeyLengthBits() {
+            return parseInt(keyLengthSelect.value, 10);
+        }
+
+        function generateRandomKey() {
+            const keyLengthBits = getKeyLengthBits();
+            const randomBytes = crypto.getRandomValues(new Uint8Array(keyLengthBits / 8));
+            keyInput.value = arrayBufferToHex(randomBytes);
+        }
+
+        async function getCryptoKeyFromInput(mode, keyLengthBits) {
+            const rawKeyInput = keyInput.value.trim();
+            if (rawKeyInput === '') {
+                throw new Error('密钥为空，请先输入密钥或点击“生成随机密钥”。');
+            }
+
+            let keyBytes;
+            const isHex = /^[0-9a-fA-F]+$/.test(rawKeyInput) && rawKeyInput.length % 2 === 0;
+            if (isHex) {
+                keyBytes = hexToUint8Array(rawKeyInput);
+            } else {
+                const textBytes = new TextEncoder().encode(rawKeyInput);
+                const hashBuffer = await crypto.subtle.digest('SHA-256', textBytes);
+                keyBytes = new Uint8Array(hashBuffer);
+            }
+
+            const neededBytes = keyLengthBits / 8;
+            let finalKeyBytes = new Uint8Array(neededBytes);
+            if (keyBytes.length >= neededBytes) {
+                finalKeyBytes = keyBytes.slice(0, neededBytes);
+            } else {
+                finalKeyBytes.set(keyBytes);
+            }
+
+            return crypto.subtle.importKey(
+                'raw',
+                finalKeyBytes,
+                { name: 'AES-' + mode, length: keyLengthBits },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        // ---------- 文件读取与处理 ----------
+        async function readFileAsArrayBuffer(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(new Error('读取文件失败'));
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ---------- 加密文件 ----------
+        async function encryptFile(file) {
+            const mode = getSelectedMode();
+            const keyLengthBits = getKeyLengthBits();
+            const fileName = file.name;
+
+            if (keyInput.value.trim() === '') {
+                generateRandomKey();
+                toast('已自动生成随机密钥，请妥善保存', 'warn', 3500);
+            }
+            const key = await getCryptoKeyFromInput(mode, keyLengthBits);
+
+            setProgress(10, '读取文件...');
+            const fileBuffer = await readFileAsArrayBuffer(file);
+            setProgress(30, '加密数据...');
+
+            let encryptedBuffer;
+            if (mode === 'GCM') {
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const encrypted = await crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv: iv, tagLength: 128 },
+                    key,
+                    fileBuffer
+                );
+                const encryptedArray = new Uint8Array(encrypted);
+                const combined = new Uint8Array(iv.length + encryptedArray.length);
+                combined.set(iv, 0);
+                combined.set(encryptedArray, iv.length);
+                encryptedBuffer = combined.buffer;
+            } else { // CBC
+                const iv = crypto.getRandomValues(new Uint8Array(16));
+                const encrypted = await crypto.subtle.encrypt(
+                    { name: 'AES-CBC', iv: iv },
+                    key,
+                    fileBuffer
+                );
+                const encryptedArray = new Uint8Array(encrypted);
+                const combined = new Uint8Array(iv.length + encryptedArray.length);
+                combined.set(iv, 0);
+                combined.set(encryptedArray, iv.length);
+                encryptedBuffer = combined.buffer;
+            }
+
+            setProgress(80, '生成加密文件...');
+            const blob = new Blob([encryptedBuffer], { type: 'application/octet-stream' });
+            downloadBlob(blob, fileName + '.enc');
+
+            setProgress(100, '✅ 加密完成！文件已下载。');
+            toast('加密完成，文件已下载', 'ok');
+            setTimeout(() => resetProgress(), 3000);
+        }
+
+        // ---------- 解密文件 ----------
+        async function decryptFile(file) {
+            const mode = getSelectedMode();
+            const keyLengthBits = getKeyLengthBits();
+            const fileName = file.name;
+
+            if (keyInput.value.trim() === '') {
+                throw new Error('请输入密钥进行解密。');
+            }
+            const key = await getCryptoKeyFromInput(mode, keyLengthBits);
+
+            setProgress(10, '读取加密文件...');
+            const fileBuffer = await readFileAsArrayBuffer(file);
+            const cipherBytes = new Uint8Array(fileBuffer);
+
+            setProgress(30, '解密数据...');
+
+            let decryptedBuffer;
+            try {
+                if (mode === 'GCM') {
+                    if (cipherBytes.length < 12 + 16) {
+                        throw new Error('GCM 密文长度过短，可能不是有效的加密文件。');
+                    }
+                    const iv = cipherBytes.slice(0, 12);
+                    const ciphertext = cipherBytes.slice(12);
+                    decryptedBuffer = await crypto.subtle.decrypt(
+                        { name: 'AES-GCM', iv: iv, tagLength: 128 },
+                        key,
+                        ciphertext
+                    );
+                } else { // CBC
+                    if (cipherBytes.length < 16 + 16) {
+                        throw new Error('CBC 密文长度过短，可能不是有效的加密文件。');
+                    }
+                    const iv = cipherBytes.slice(0, 16);
+                    const ciphertext = cipherBytes.slice(16);
+                    decryptedBuffer = await crypto.subtle.decrypt(
+                        { name: 'AES-CBC', iv: iv },
+                        key,
+                        ciphertext
+                    );
+                }
+            } catch (err) {
+                throw new Error('解密失败：可能是密钥错误、模式不匹配或文件已损坏。');
+            }
+
+            setProgress(80, '生成解密文件...');
+            const blob = new Blob([decryptedBuffer], { type: 'application/octet-stream' });
+            let downloadName = fileName;
+            if (downloadName.endsWith('.enc')) {
+                downloadName = downloadName.slice(0, -4);
+            } else {
+                downloadName = 'decrypted_' + downloadName;
+            }
+            downloadBlob(blob, downloadName);
+
+            setProgress(100, '✅ 解密完成！文件已下载。');
+            toast('解密完成，文件已下载', 'ok');
+            setTimeout(() => resetProgress(), 3000);
+        }
+
+        // ---------- 事件处理 ----------
+        async function handleEncrypt() {
+            clearError();
+            const file = fileInput.files[0];
+            if (!file) {
+                showError('请先选择一个文件。');
+                toast('请先选择一个文件', 'err');
+                return;
+            }
+
+            try {
+                encryptBtn.disabled = true;
+                decryptBtn.disabled = true;
+                generateKeyBtn.disabled = true;
+                await encryptFile(file);
+            } catch (err) {
+                showError('加密失败: ' + err.message);
+                toast('加密失败：' + err.message, 'err', 4000);
+                console.error(err);
+                resetProgress();
+            } finally {
+                encryptBtn.disabled = false;
+                decryptBtn.disabled = false;
+                generateKeyBtn.disabled = false;
+            }
+        }
+
+        async function handleDecrypt() {
+            clearError();
+            const file = fileInput.files[0];
+            if (!file) {
+                showError('请先选择一个加密文件（.enc）。');
+                toast('请先选择一个加密文件', 'err');
+                return;
+            }
+
+            try {
+                encryptBtn.disabled = true;
+                decryptBtn.disabled = true;
+                generateKeyBtn.disabled = true;
+                await decryptFile(file);
+            } catch (err) {
+                showError('解密失败: ' + err.message);
+                toast('解密失败：' + err.message, 'err', 4000);
+                console.error(err);
+                resetProgress();
+            } finally {
+                encryptBtn.disabled = false;
+                decryptBtn.disabled = false;
+                generateKeyBtn.disabled = false;
+            }
+        }
+
+        function handleGenerateKey() {
+            clearError();
+            generateRandomKey();
+            toast('已生成随机密钥，请妥善保存', 'warn', 3000);
+            statusText.textContent = '已生成随机密钥，请妥善保存。';
+            setTimeout(() => {
+                if (statusText.textContent === '已生成随机密钥，请妥善保存。') {
+                    resetProgress();
+                }
+            }, 3000);
+        }
+
+        function handleClear() {
+            clearError();
+            fileInput.value = '';
+            fileInfo.classList.add('hidden');
+            fileNameSpan.textContent = '未选择';
+            fileSizeSpan.textContent = '0 B';
+            keyInput.value = '';
+            resetProgress();
+            statusText.textContent = '已清空。';
+            toast('已清空', 'ok');
+            setTimeout(() => {
+                if (statusText.textContent === '已清空。') {
+                    resetProgress();
+                }
+            }, 2000);
+        }
+
+        fileInput.addEventListener('change', () => {
+            clearError();
+            const file = fileInput.files[0];
+            if (file) {
+                fileInfo.classList.remove('hidden');
+                fileNameSpan.textContent = file.name;
+                fileSizeSpan.textContent = formatFileSize(file.size);
+                statusText.textContent = '文件已选择，可以加密或解密。';
+            } else {
+                fileInfo.classList.add('hidden');
+                fileNameSpan.textContent = '未选择';
+                fileSizeSpan.textContent = '0 B';
+                resetProgress();
+            }
+        });
+
+        // 绑定事件
+        encryptBtn.addEventListener('click', handleEncrypt);
+        decryptBtn.addEventListener('click', handleDecrypt);
+        generateKeyBtn.addEventListener('click', handleGenerateKey);
+        clearBtn.addEventListener('click', handleClear);
+
+        // 初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            generateRandomKey();
+            resetProgress();
+        });
+
+        // 安全检查
+        if (!window.crypto || !window.crypto.subtle) {
+            showError('当前浏览器或环境不支持 Web Crypto API，请使用现代浏览器或 HTTPS 环境。');
+            toast('不支持 Web Crypto API', 'err', 5000);
+        }
+    })();
+</script>
+</body>
+</html>
